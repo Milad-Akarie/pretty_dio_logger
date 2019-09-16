@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   dio:
+  colorize:
 
 dev_dependencies:
   flutter_test:
