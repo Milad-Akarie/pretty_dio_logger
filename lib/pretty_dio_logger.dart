@@ -25,10 +25,10 @@ class PrettyDioLogger extends Interceptor {
   final bool error;
 
   /// initialTab count to print json response
-  static const int _initialTab = 2;
+  static const int initialTab = 1;
 
   /// 1 tab length
-  static const String _tabStep = '    ';
+  static const String tabStep = '    ';
 
   /// print compact json response
   final bool compact;
@@ -40,11 +40,11 @@ class PrettyDioLogger extends Interceptor {
       {this.request = true,
       this.requestHeader = true,
       this.requestBody = false,
-      this.responseHeader = false,
-      this.responseBody = true,
+      this.responseHeader = true,
+      this.responseBody = false,
       this.error = true,
-      this.maxWidth = 60,
-      this.compact = false});
+      this.maxWidth = 90,
+      this.compact = true});
 
   @override
   FutureOr<dynamic> onRequest(RequestOptions options) {
@@ -52,14 +52,16 @@ class PrettyDioLogger extends Interceptor {
       _printRequestHeader(options);
     }
     if (requestHeader) {
-      final headers = Map();
-      if (options.headers != null) headers.addAll(options.headers);
-      headers['contentType'] = options.contentType?.toString();
-      headers['responseType'] = options.responseType?.toString();
-      headers['followRedirects'] = options.followRedirects;
-      headers['connectTimeout'] = options.connectTimeout;
-      headers['receiveTimeout'] = options.receiveTimeout;
-      _printMapAsTable(headers, header: 'Headers');
+      if (requestHeader) {
+        final headers = Map();
+        if (options.headers != null) headers.addAll(options.headers);
+        headers['contentType'] = options.contentType?.toString();
+        headers['responseType'] = options.responseType?.toString();
+        headers['followRedirects'] = options.followRedirects;
+        headers['connectTimeout'] = options.connectTimeout;
+        headers['receiveTimeout'] = options.receiveTimeout;
+        _printMapAsTable(headers, header: 'Headers');
+      }
 
       if (options.extra != null) {
         _printMapAsTable(options.extra, header: 'Extras');
@@ -74,7 +76,9 @@ class PrettyDioLogger extends Interceptor {
   FutureOr<dynamic> onError(DioError err) {
     if (error) {
       final uri = err.response.request.uri;
-      _printBoxed('DioError  ║  $uri ║ Status: ${err.response.statusCode} ${err.response.statusMessage}');
+
+      _printBoxed('DioError ║ $uri ║ Status: ${err.response.statusCode} ${err.response.statusMessage}');
+
       if (err.response != null && err.response.data != null) {
         print('╔ ${err.type.toString()}');
         _printResponse(err.response);
@@ -82,6 +86,12 @@ class PrettyDioLogger extends Interceptor {
       _printLine('╚');
       print('');
     }
+  }
+
+  void _printBoxed(String text) {
+    _printLine('╔');
+    print('║ $text');
+    _printLine('╚');
   }
 
   @override
@@ -94,17 +104,13 @@ class PrettyDioLogger extends Interceptor {
     }
 
     if (responseBody) {
-      print('╔ Body \n ║');
+      print('╔ Body');
+      print('║');
       _printResponse(response);
     }
 
-    _printLine('║\n ╚');
-  }
-
-  void _printBoxed(String text) {
-    _printLine('╔', '╗');
-    print('║ $text');
-    _printLine('╚', '╝');
+    print('║');
+    _printLine('╚');
   }
 
   void _printResponse(Response response) {
@@ -124,7 +130,7 @@ class PrettyDioLogger extends Interceptor {
     final uri = response?.request?.uri;
     String method = response.request.method;
     _printBoxed(
-        ' Response  ║  $method ${_getArrow(method)} $uri ║ Status: ${response.statusCode} ${response.statusMessage}');
+        'Response ║ $method ${_getArrow(method)} $uri ║ Status: ${response.statusCode} ${response.statusMessage}');
   }
 
   String _getArrow(String method) {
@@ -134,16 +140,16 @@ class PrettyDioLogger extends Interceptor {
   void _printRequestHeader(RequestOptions options) {
     final uri = options?.uri;
     String method = options?.method;
-    _printBoxed(' Request  ║  $method ${_getArrow(method)} $uri ');
+    _printBoxed('Request ║ $method ${_getArrow(method)} $uri ');
   }
 
-  void _printLine([String pre = '', String suf = '╝']) => print('$pre${'═' * maxWidth}$suf');
+  void _printLine([String pre = '', String suf = '╝']) => print('$pre${'═' * maxWidth}');
 
   void _printKV(String key, Object v) {
     final pre = '╟ $key: ';
     final msg = v.toString();
-    final maxLength = (maxWidth * 1.6).toInt();
-    if (pre.length + msg.length > maxLength) {
+
+    if (pre.length + msg.length > maxWidth) {
       print(pre);
       _printBlock(msg);
     } else
@@ -151,18 +157,16 @@ class PrettyDioLogger extends Interceptor {
   }
 
   void _printBlock(String msg) {
-    final maxLength = (maxWidth * 1.6).toInt();
-    int lines = (msg.length / maxLength).ceil();
+    int lines = (msg.length / maxWidth).ceil();
     for (int i = 0; i < lines; ++i) {
-      print(
-          (i >= 0 ? '║   ' : '') + msg.substring(i * maxLength, math.min<int>(i * maxLength + maxLength, msg.length)));
+      print((i >= 0 ? '║ ' : '') + msg.substring(i * maxWidth, math.min<int>(i * maxWidth + maxWidth, msg.length)));
     }
   }
 
-  String _getTabs([int tabCount = _initialTab]) => _tabStep * tabCount;
+  String _getTabs([int tabCount = initialTab]) => tabStep * tabCount;
 
-  void _printPrettyMap(Map data, {int tabs = _initialTab, bool isListItem = false, bool isLast = false}) {
-    final bool isRoot = tabs == _initialTab;
+  void _printPrettyMap(Map data, {int tabs = initialTab, bool isListItem = false, bool isLast = false}) {
+    final bool isRoot = tabs == initialTab;
     final initialIndent = _getTabs(tabs);
     tabs++;
 
@@ -186,26 +190,36 @@ class PrettyDioLogger extends Interceptor {
         else {
           print('║${_getTabs(tabs)} $key: [');
           _printList(value, tabs: tabs);
-          print('║${_getTabs(tabs)} ] ${isLast ? '' : ','}');
+          print('║${_getTabs(tabs)} ]${isLast ? '' : ','}');
         }
       } else {
-        print('║${_getTabs(tabs)} $key: ${_fixBreaks(value, tabs)}${!isLast ? ',' : ''}');
+        final msg = value.toString().replaceAll('\n', '');
+        final indent = _getTabs(tabs);
+        final lineWidth = maxWidth - indent.length;
+        if (msg.length + indent.length > lineWidth) {
+          int lines = (msg.length / lineWidth).ceil();
+          for (int i = 0; i < lines; ++i) {
+            print(
+                '║${_getTabs(tabs)} ${msg.substring(i * lineWidth, math.min<int>(i * lineWidth + lineWidth, msg.length))}');
+          }
+        } else
+          print('║${_getTabs(tabs)} $key: $msg${!isLast ? ',' : ''}');
       }
     });
 
     print('║$initialIndent} ${isListItem && !isLast ? ',' : ''}');
   }
 
-  void _printList(List list, {int tabs = _initialTab}) {
+  void _printList(List list, {int tabs = initialTab}) {
     list.asMap().forEach((i, e) {
       final isLast = i == list.length - 1;
       if (e is Map) {
         if (compact && _canFlattenMap(e))
-          print('║${_getTabs(tabs)}  $e ${!isLast ? ',' : ''}');
+          print('║${_getTabs(tabs)}  $e${!isLast ? ',' : ''}');
         else
           _printPrettyMap(e, tabs: tabs + 1, isListItem: true, isLast: isLast);
       } else
-        print('║${_getTabs(tabs + 2)} $e ${isLast ? '' : ','}');
+        print('║${_getTabs(tabs + 2)} $e${isLast ? '' : ','}');
     });
   }
 
@@ -215,10 +229,6 @@ class PrettyDioLogger extends Interceptor {
 
   bool _canFlattenList(List list) {
     return (list.length < 10 && list.toString().length < maxWidth);
-  }
-
-  String _fixBreaks(value, int tabs) {
-    return value.toString().replaceAll('\n', '\n ║ ${_getTabs(tabs)}');
   }
 
   void _printMapAsTable(Map map, {String header}) {
