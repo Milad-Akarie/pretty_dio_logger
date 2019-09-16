@@ -25,10 +25,10 @@ class PrettyDioLogger extends Interceptor {
   final bool error;
 
   /// initialTab count to print json response
-  static const int initialTab = 2;
+  static const int _initialTab = 2;
 
   /// 1 tab length
-  static const String tabStep = '    ';
+  static const String _tabStep = '    ';
 
   /// print compact json response
   final bool compact;
@@ -159,10 +159,10 @@ class PrettyDioLogger extends Interceptor {
     }
   }
 
-  String _getTabs([int tabCount = initialTab]) => tabStep * tabCount;
+  String _getTabs([int tabCount = _initialTab]) => _tabStep * tabCount;
 
-  void _printPrettyMap(Map data, {int tabs = initialTab, bool isListItem = false, bool isLast = false}) {
-    final bool isRoot = tabs == initialTab;
+  void _printPrettyMap(Map data, {int tabs = _initialTab, bool isListItem = false, bool isLast = false}) {
+    final bool isRoot = tabs == _initialTab;
     final initialIndent = _getTabs(tabs);
     tabs++;
 
@@ -196,7 +196,7 @@ class PrettyDioLogger extends Interceptor {
     print('║$initialIndent} ${isListItem && !isLast ? ',' : ''}');
   }
 
-  void _printList(List list, {int tabs = initialTab}) {
+  void _printList(List list, {int tabs = _initialTab}) {
     list.asMap().forEach((i, e) {
       final isLast = i == list.length - 1;
       if (e is Map) {

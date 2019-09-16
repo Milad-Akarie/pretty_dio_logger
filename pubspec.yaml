@@ -1,6 +1,6 @@
 name: pretty_dio_logger
 description: Pretty logger for Dio
-version: 0.0.1
+version: 1.0.0
 author: Milad Akarie <milad.akarie@gmail.com>
 homepage: https://github.com/Milad-Akarie/pretty_dio_logger
 
@@ -10,8 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dio:
-  colorize:
+  dio: ">=2.0.0 <3.0.0"
 
 dev_dependencies:
   flutter_test:
