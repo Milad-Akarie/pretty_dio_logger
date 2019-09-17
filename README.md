@@ -1,7 +1,6 @@
-# pretty_dio_logger
+# pretty_dio_logger 1.0.1
 
-a pretty logger for [Dio](https://pub.dev/packages/dio)
-
+Pretty Dio logger is a [Dio](https://pub.dev/packages/dio) interceptor that logs network calls in a pretty, easy to read format.
 ## Usage
 Simply add PrettyDioLogger to your dio interceptors.
 ```Dart
@@ -19,4 +18,9 @@ dio.interceptors.add(PrettyDioLogger());
 ```
 
 ## How it looks like
-![Response Example](https://github.com/Milad-Akarie/pretty_dio_logger/blob/master/images/log_example.png?raw=true "Response Example")
+### VS Code
+![Request Example](https://github.com/Milad-Akarie/pretty_dio_logger/blob/master/images/request_log_vscode.png?raw=true "Request Example")
+![Error Example](https://github.com/Milad-Akarie/pretty_dio_logger/blob/master/images/error_log_vscode.png?raw=true "Error Example")
+
+### Android studio
+ ![Response Example](https://github.com/Milad-Akarie/pretty_dio_logger/blob/master/images/response_log_android_studio.png?raw=true "Response Example")
