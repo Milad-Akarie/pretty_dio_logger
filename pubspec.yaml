@@ -1,6 +1,6 @@
 name: pretty_dio_logger
 description: Pretty Dio logger is a Dio interceptor that logs network calls in a pretty, easy to read format.
-version: 1.0.2+1
+version: 1.0.3
 author: Milad Akarie <milad.akarie@gmail.com>
 homepage: https://github.com/Milad-Akarie/pretty_dio_logger
 

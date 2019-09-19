@@ -1,4 +1,4 @@
-# pretty_dio_logger 1.0.2+1
+# pretty_dio_logger 1.0.3
 
 Pretty Dio logger is a [Dio](https://pub.dev/packages/dio) interceptor that logs network calls in a pretty, easy to read format.
 ## Usage
@@ -14,7 +14,7 @@ dio.interceptors.add(PrettyDioLogger());
         responseHeader: false,
         error: true,
         compact: true,
-        maxWidth: 60));
+        maxWidth: 90));
 ```
 
 ## How it looks like

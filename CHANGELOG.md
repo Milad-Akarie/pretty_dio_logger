@@ -1,4 +1,8 @@
 
+## [1.0.3] 
+### add
+ * query parameters to logging;
+ 
 ## [1.0.2+1] 
 ### fix
  * packaging typos.

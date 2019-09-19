@@ -40,8 +40,8 @@ class PrettyDioLogger extends Interceptor {
       {this.request = true,
       this.requestHeader = true,
       this.requestBody = false,
-      this.responseHeader = true,
-      this.responseBody = false,
+        this.responseHeader = false,
+        this.responseBody = true,
       this.error = true,
       this.maxWidth = 90,
       this.compact = true});
@@ -75,7 +75,9 @@ class PrettyDioLogger extends Interceptor {
       final uri = err.response.request.uri;
 
       _printBoxed(
-          header: 'DioError ║ Status: ${err.response.statusCode} ${err.response.statusMessage}', text: uri.toString());
+          header:
+          'DioError ║ Status: ${err.response.statusCode} ${err.response.statusMessage}',
+          text: uri.toString());
 
       if (err.response != null && err.response.data != null) {
         print('╔ ${err.type.toString()}');
@@ -88,19 +90,13 @@ class PrettyDioLogger extends Interceptor {
     return err;
   }
 
-  void _printBoxed({String header, String text}) {
-    print('');
-    print('╔╣ $header');
-    print('║  $text');
-    _printLine('╚');
-  }
-
   @override
   Future onResponse(Response response) async {
     _printResponseHeader(response);
     if (responseHeader) {
       final responseHeaders = Map<String, String>();
-      response.headers.forEach((k, list) => responseHeaders[k] = list.toString());
+      response.headers
+          .forEach((k, list) => responseHeaders[k] = list.toString());
       _printMapAsTable(responseHeaders, header: 'Headers');
     }
 
@@ -114,6 +110,13 @@ class PrettyDioLogger extends Interceptor {
     _printLine('╚');
 
     return response;
+  }
+
+  void _printBoxed({String header, String text}) {
+    print('');
+    print('╔╣ $header');
+    print('║  $text');
+    _printLine('╚');
   }
 
   void _printResponse(Response response) {
@@ -133,7 +136,9 @@ class PrettyDioLogger extends Interceptor {
     final uri = response?.request?.uri;
     String method = response.request.method;
     _printBoxed(
-        header: 'Response ║ $method ║ Status: ${response.statusCode} ${response.statusMessage}', text: uri.toString());
+        header:
+        'Response ║ $method ║ Status: ${response.statusCode} ${response.statusMessage}',
+        text: uri.toString());
   }
 
   void _printRequestHeader(RequestOptions options) {
@@ -142,7 +147,8 @@ class PrettyDioLogger extends Interceptor {
     _printBoxed(header: 'Request ║ $method ', text: uri.toString());
   }
 
-  void _printLine([String pre = '', String suf = '╝']) => print('$pre${'═' * maxWidth}');
+  void _printLine([String pre = '', String suf = '╝']) =>
+      print('$pre${'═' * maxWidth}');
 
   void _printKV(String key, Object v) {
     final pre = '╟ $key: ';
@@ -158,13 +164,16 @@ class PrettyDioLogger extends Interceptor {
   void _printBlock(String msg) {
     int lines = (msg.length / maxWidth).ceil();
     for (int i = 0; i < lines; ++i) {
-      print((i >= 0 ? '║ ' : '') + msg.substring(i * maxWidth, math.min<int>(i * maxWidth + maxWidth, msg.length)));
+      print((i >= 0 ? '║ ' : '') +
+          msg.substring(i * maxWidth,
+              math.min<int>(i * maxWidth + maxWidth, msg.length)));
     }
   }
 
   String _indent([int tabCount = initialTab]) => tabStep * tabCount;
 
-  void _printPrettyMap(Map data, {int tabs = initialTab, bool isListItem = false, bool isLast = false}) {
+  void _printPrettyMap(Map data,
+      {int tabs = initialTab, bool isListItem = false, bool isLast = false}) {
     final bool isRoot = tabs == initialTab;
     final initialIndent = _indent(tabs);
     tabs++;
@@ -223,7 +232,12 @@ class PrettyDioLogger extends Interceptor {
   }
 
   bool _canFlattenMap(Map map) {
-    return map.values.where((val) => val is Map || val is List).isEmpty && map.toString().length < maxWidth;
+    return map.values
+        .where((val) => val is Map || val is List)
+        .isEmpty &&
+        map
+            .toString()
+            .length < maxWidth;
   }
 
   bool _canFlattenList(List list) {
