@@ -1,9 +1,18 @@
 
+## [1.0.2+1] 
+### fix
+ * packaging typos.
+
+## [1.0.2] 
+### add
+* support for dio 3.0.0
+
+
 ## [1.0.1] 
-### added
+### add
 * VSCode compatibility
 
 
-## [1.0.0] - TODO: Add release date.
+## [1.0.0] 
 
-* TODO: Describe initial release.
+* initial release.

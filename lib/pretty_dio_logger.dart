@@ -47,7 +47,7 @@ class PrettyDioLogger extends Interceptor {
       this.compact = true});
 
   @override
-  FutureOr<dynamic> onRequest(RequestOptions options) {
+  Future onRequest(RequestOptions options) async {
     if (request) {
       _printRequestHeader(options);
     }
@@ -70,10 +70,11 @@ class PrettyDioLogger extends Interceptor {
     if (requestBody && options.method != 'GET') {
       _printMapAsTable(options.data, header: 'Body');
     }
+    return options;
   }
 
   @override
-  FutureOr<dynamic> onError(DioError err) {
+  Future onError(DioError err) async {
     if (error) {
       final uri = err.response.request.uri;
 
@@ -87,6 +88,8 @@ class PrettyDioLogger extends Interceptor {
       _printLine('╚');
       print('');
     }
+
+    return err;
   }
 
   void _printBoxed({String header, String text}) {
@@ -97,7 +100,7 @@ class PrettyDioLogger extends Interceptor {
   }
 
   @override
-  FutureOr<dynamic> onResponse(Response response) {
+  Future onResponse(Response response) async {
     _printResponseHeader(response);
     if (responseHeader) {
       final responseHeaders = Map<String, String>();
@@ -113,6 +116,8 @@ class PrettyDioLogger extends Interceptor {
 
     print('║');
     _printLine('╚');
+
+    return response;
   }
 
   void _printResponse(Response response) {
