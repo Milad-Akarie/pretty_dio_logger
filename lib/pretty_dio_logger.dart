@@ -52,20 +52,16 @@ class PrettyDioLogger extends Interceptor {
       _printRequestHeader(options);
     }
     if (requestHeader) {
-      if (requestHeader) {
-        final headers = Map();
-        if (options.headers != null) headers.addAll(options.headers);
-        headers['contentType'] = options.contentType?.toString();
-        headers['responseType'] = options.responseType?.toString();
-        headers['followRedirects'] = options.followRedirects;
-        headers['connectTimeout'] = options.connectTimeout;
-        headers['receiveTimeout'] = options.receiveTimeout;
-        _printMapAsTable(headers, header: 'Headers');
-      }
-
-      if (options.extra != null) {
-        _printMapAsTable(options.extra, header: 'Extras');
-      }
+      _printMapAsTable(options.queryParameters, header: 'Query Parameters');
+      final headers = Map();
+      if (options.headers != null) headers.addAll(options.headers);
+      headers['contentType'] = options.contentType?.toString();
+      headers['responseType'] = options.responseType?.toString();
+      headers['followRedirects'] = options.followRedirects;
+      headers['connectTimeout'] = options.connectTimeout;
+      headers['receiveTimeout'] = options.receiveTimeout;
+      _printMapAsTable(headers, header: 'Headers');
+      _printMapAsTable(options.extra, header: 'Extras');
     }
     if (requestBody && options.method != 'GET') {
       _printMapAsTable(options.data, header: 'Body');
