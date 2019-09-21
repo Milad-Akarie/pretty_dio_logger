@@ -1,4 +1,9 @@
 
+## [1.0.4] 
+### add
+ * support for dio 3.0.1
+ * external logging
+
 ## [1.0.3] 
 ### add
  * query parameters to logging;
