@@ -45,12 +45,12 @@ class PrettyDioLogger extends Interceptor {
       {this.request = true,
       this.requestHeader = true,
       this.requestBody = false,
-        this.responseHeader = false,
-        this.responseBody = true,
+      this.responseHeader = false,
+      this.responseBody = true,
       this.error = true,
       this.maxWidth = 90,
-        this.compact = true,
-        this.logPrint = print});
+      this.compact = true,
+      this.logPrint = print});
 
   @override
   Future onRequest(RequestOptions options) async {
@@ -226,11 +226,7 @@ class PrettyDioLogger extends Interceptor {
   }
 
   bool _canFlattenMap(Map map) {
-    return map.values
-        .where((val) => val is Map || val is List)
-        .isEmpty && map
-        .toString()
-        .length < maxWidth;
+    return map.values.where((val) => val is Map || val is List).isEmpty && map.toString().length < maxWidth;
   }
 
   bool _canFlattenList(List list) {
