@@ -1,4 +1,8 @@
 
+## [1.0.5] 
+### add
+ * support for dio 3.0.3
+
 ## [1.0.4] 
 ### add
  * support for dio 3.0.1

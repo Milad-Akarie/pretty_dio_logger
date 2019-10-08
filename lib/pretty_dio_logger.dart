@@ -78,15 +78,18 @@ class PrettyDioLogger extends Interceptor {
   @override
   Future onError(DioError err) async {
     if (error) {
-      final uri = err.response.request.uri;
-      _printBoxed(
-          header: 'DioError ║ Status: ${err.response.statusCode} ${err.response.statusMessage}', text: uri.toString());
-      if (err.response != null && err.response.data != null) {
-        logPrint('╔ ${err.type.toString()}');
-        _printResponse(err.response);
+      if (err.type == DioErrorType.RESPONSE) {
+        final uri = err.response.request.uri;
+        _printBoxed(
+            header: 'DioError ║ Status: ${err.response.statusCode} ${err.response.statusMessage}',
+            text: uri.toString());
+        if (err.response != null && err.response.data != null) {
+          logPrint('╔ ${err.type.toString()}');
+          _printResponse(err.response);
+        }
+        _printLine('╚');
+        logPrint('');
       }
-      _printLine('╚');
-      logPrint('');
     }
     return err;
   }
