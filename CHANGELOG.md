@@ -1,4 +1,9 @@
 
+## [1.0.6] 
+### fix
+ * extra empty block when response logging is disabled (#2).
+ * handle none response DioError types.
+
 ## [1.0.5] 
 ### add
  * support for dio 3.0.3
