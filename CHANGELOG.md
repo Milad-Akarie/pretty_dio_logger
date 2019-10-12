@@ -1,3 +1,7 @@
+## [1.0.7] 
+### add
+ * log dio form data
+
 
 ## [1.0.6] 
 ### fix
