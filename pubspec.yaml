@@ -1,6 +1,6 @@
 name: pretty_dio_logger
 description: Pretty Dio logger is a Dio interceptor that logs network calls in a pretty, easy to read format.
-version: 1.0.7
+version: 1.0.8
 author: Milad Akarie <milad.akarie@gmail.com>
 homepage: https://github.com/Milad-Akarie/pretty_dio_logger
 
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dio: ">=2.1.9 <=3.0.5"
+  dio: ">=2.1.9 <=3.0.8"
 
 dev_dependencies:
   flutter_test:

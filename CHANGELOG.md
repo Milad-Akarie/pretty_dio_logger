@@ -1,7 +1,10 @@
-## [1.0.7] 
+## [1.0.8]
+### change
+ * Update dio dependency to support dio 3.0.6 (#3).
+
+## [1.0.7]
 ### add
  * log dio form data
-
 
 ## [1.0.6] 
 ### fix
