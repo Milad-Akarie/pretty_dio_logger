@@ -202,7 +202,8 @@ class PrettyDioLogger extends Interceptor {
       final isLast = index == data.length - 1;
       var value = data[key];
 //      key = '\"$key\"';
-      if (value is String) value = '\"$value\"';
+	    if (value is String)
+		    value = '\"${value.toString().replaceAll(RegExp(r'(\r|\n)+'), " ")}\"';
       if (value is Map) {
         if (compact && _canFlattenMap(value))
           logPrint('║${_indent(tabs)} $key: $value${!isLast ? ',' : ''}');

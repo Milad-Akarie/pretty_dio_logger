@@ -1,3 +1,13 @@
+
+## [1.1.1]
+- remove flutter as dependency
+
+## [1.1.0]
+
+### fix
+
+- remove ugly new lines from string values
+
 ## [1.0.9]
 
 ### fix
