@@ -59,7 +59,7 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   Future onRequest(RequestOptions options) async {
-    if(!uriFilter(options?.uri)) return;
+    if(!uriFilter(options?.uri)) return options;
 
     if (request) {
       _printRequestHeader(options);
@@ -97,7 +97,7 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   Future onError(DioError err) async {
-    if(!uriFilter(err.response.request.uri)) return;
+    if(!uriFilter(err.response.request.uri)) return err;
 
     if (error) {
       if (err.type == DioErrorType.RESPONSE) {
@@ -120,7 +120,7 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   Future onResponse(Response response) async {
-    if(!uriFilter(response?.request?.uri)) return;
+    if(!uriFilter(response?.request?.uri)) return response;
 
     _printResponseHeader(response);
     if (responseHeader) {
