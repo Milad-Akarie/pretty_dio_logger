@@ -144,7 +144,7 @@ class PrettyDioLogger extends Interceptor {
       else if (response.data is List) {
         logPrint('║${_indent()}[');
         _printList(response.data);
-        logPrint('║${_indent()}[');
+        logPrint('║${_indent()}]');
       } else
         _printBlock(response.data.toString());
     }
