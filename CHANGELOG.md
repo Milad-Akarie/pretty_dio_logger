@@ -1,4 +1,5 @@
-
+## [1.2.0-beta]
+- migrate to nullSafety
 ## [1.1.1]
 - remove flutter as dependency
 

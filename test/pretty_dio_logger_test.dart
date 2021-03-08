@@ -1,3 +1,1 @@
-void main() {
-  // todo add test
-}
+void main() async {}
