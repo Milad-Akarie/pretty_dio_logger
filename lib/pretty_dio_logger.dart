@@ -82,10 +82,10 @@ class PrettyDioLogger extends Interceptor {
     }
     super.onRequest(options, handler);
   }
-  
+
   @override
   void onError(DioError err, ErrorInterceptorHandler handler) {
-     if (error) {
+    if (error) {
       if (err.type == DioErrorType.response) {
         final uri = err.response?.requestOptions.uri;
         _printBoxed(
