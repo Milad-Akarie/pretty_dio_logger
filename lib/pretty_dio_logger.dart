@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 
+bool _defaultUriFilter(Uri uri) => true;
+
 class PrettyDioLogger extends Interceptor {
   /// Print request [Options]
   final bool request;
@@ -39,6 +41,8 @@ class PrettyDioLogger extends Interceptor {
   /// you can also write log in a file.
   void Function(Object object) logPrint;
 
+  bool Function(Uri uri) uriFilter;
+
   PrettyDioLogger(
       {this.request = true,
       this.requestHeader = false,
@@ -48,10 +52,13 @@ class PrettyDioLogger extends Interceptor {
       this.error = true,
       this.maxWidth = 90,
       this.compact = true,
-      this.logPrint = print});
+      this.logPrint = print,
+      this.uriFilter = _defaultUriFilter});
 
   @override
   Future onRequest(RequestOptions options) async {
+    if(!uriFilter(options?.uri)) return options;
+
     if (request) {
       _printRequestHeader(options);
     }
@@ -87,6 +94,8 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   Future onError(DioError err) async {
+    if(!uriFilter(err.response.request.uri)) return err;
+
     if (error) {
       if (err.type == DioErrorType.response) {
         final uri = err.response?.request.uri;
@@ -109,6 +118,8 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   Future onResponse(Response response) async {
+    if(!uriFilter(response?.request?.uri)) return response;
+
     _printResponseHeader(response);
     if (responseHeader) {
       final responseHeaders = <String, String>{};
