@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
@@ -32,6 +33,9 @@ class PrettyDioLogger extends Interceptor {
 
   /// Width size per logPrint
   final int maxWidth;
+
+  /// Size in which the Uint8List will be splitted
+  static const int chunkSize = 15;
 
   /// Log printer; defaults logPrint log to console.
   /// In flutter, you'd better use debugPrint.
@@ -136,10 +140,14 @@ class PrettyDioLogger extends Interceptor {
     if (response.data != null) {
       if (response.data is Map) {
         _printPrettyMap(response.data as Map);
+      } else if (response.data is Uint8List) {
+        logPrint('║${_indent()}[');
+        _printUint8List(response.data as Uint8List);
+        logPrint('║${_indent()}]');
       } else if (response.data is List) {
         logPrint('║${_indent()}[');
         _printList(response.data as List);
-        logPrint('║${_indent()}[');
+        logPrint('║${_indent()}]');
       } else {
         _printBlock(response.data.toString());
       }
@@ -253,6 +261,19 @@ class PrettyDioLogger extends Interceptor {
         logPrint('║${_indent(tabs + 2)} $e${isLast ? '' : ','}');
       }
     });
+  }
+
+  void _printUint8List(Uint8List list, {int tabs = initialTab}) {
+    var chunks = [];
+    for (var i = 0; i < list.length; i += chunkSize) {
+      chunks.add(
+        list.sublist(
+            i, i + chunkSize > list.length ? list.length : i + chunkSize),
+      );
+    }
+    chunks.forEach((element) => logPrint(
+          '║${_indent(tabs)} ${element.join(", ")}',
+        ));
   }
 
   bool _canFlattenMap(Map map) {
