@@ -35,7 +35,7 @@ class PrettyDioLogger extends Interceptor {
   final int maxWidth;
 
   /// Size in which the Uint8List will be splitted
-  static const int chunkSize = 15;
+  static const int chunkSize = 20;
 
   /// Log printer; defaults logPrint log to console.
   /// In flutter, you'd better use debugPrint.
