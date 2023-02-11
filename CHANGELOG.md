@@ -1,6 +1,6 @@
 #Changelog
 
-## [1.3.2]
+## [1.3.3]
 
 - support diox >= 5.0.0
 
