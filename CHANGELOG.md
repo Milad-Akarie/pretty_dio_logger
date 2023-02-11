@@ -1,10 +1,10 @@
 #Changelog
 
-## [1.2.0-beta-1]
+## [1.3.2]
 
 - support diox >= 5.0.0
 
-## [1.3.0]
+## [1.2.0-beta-1]
 
 - support dio >= 4.0.0
 
