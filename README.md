@@ -2,7 +2,7 @@
 
 Pretty Dio logger is a [Diox](https://pub.dev/packages/diox) interceptor that logs network calls in a pretty, easy to read format.
 
-> Fokred from [pretty_dio_logger](https://github.com/Milad-Akarie/pretty_dio_logger) to support Diox
+> Forked from [pretty_dio_logger](https://github.com/Milad-Akarie/pretty_dio_logger) to support Diox
 
 ## Usage
 
