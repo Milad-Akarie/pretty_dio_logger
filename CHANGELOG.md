@@ -1,10 +1,19 @@
 #Changelog
 
 ## [1.2.0-beta-1]
-- support dio >= 4.0.0 
+
+- support diox >= 5.0.0
+
+## [1.3.0]
+
+- support dio >= 4.0.0
+
 ## [1.2.0-beta]
+
 - migrate to nullSafety
+
 ## [1.1.1]
+
 - remove flutter as dependency
 
 ## [1.1.0]
