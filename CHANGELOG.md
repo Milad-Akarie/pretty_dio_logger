@@ -1,5 +1,9 @@
 #Changelog
 
+## [1.3.4]
+
+- support dio >= 5.0.0
+
 ## [1.3.3]
 
 - support diox >= 5.0.0

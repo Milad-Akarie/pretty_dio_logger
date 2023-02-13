@@ -1,7 +1,6 @@
-
 import 'dart:math' as math;
 
-import 'package:diox/diox.dart';
+import 'package:dio/dio.dart';
 
 class PrettyDioLogger extends Interceptor {
   /// Print request [Options]

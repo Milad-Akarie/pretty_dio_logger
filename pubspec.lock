@@ -17,11 +17,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
-  diox:
+  dio:
     dependency: "direct main"
     description:
-      name: diox
-      sha256: "6b971f9936f1de9a6d7b2070a1f626e4a3c490d0c044d432b72e96537db2ed22"
+      name: dio
+      sha256: "9fdbf71baeb250fc9da847f6cb2052196f62c19906a3657adfc18631a667d316"
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
