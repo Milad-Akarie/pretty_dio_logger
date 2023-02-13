@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:pretty_diox_logger/pretty_diox_logger.dart';
+
+import '../lib/pretty_dio_logger.dart';
 
 void main() async {
   final dio = Dio()
