@@ -6,18 +6,19 @@ Pretty Dio logger is a [Dio](https://pub.dev/packages/dio) interceptor that logs
 
 Simply add PrettyDioLogger to your dio interceptors.
 
-```Dart
+```dart
 Dio dio = Dio();
 dio.interceptors.add(PrettyDioLogger());
 // customization
-   dio.interceptors.add(PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        maxWidth: 90));
+dio.interceptors.add(PrettyDioLogger(
+    requestHeader: true,
+    requestBody: true,
+    responseBody: true,
+    responseHeader: false,
+    error: true,
+    compact: true,
+    maxWidth: 90,
+));
 ```
 
 ## How it looks like
