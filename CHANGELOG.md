@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.3.0+1]
+- Update readme file badge
 ## [1.3.0]
 
 - support dio >= 5.0.0
