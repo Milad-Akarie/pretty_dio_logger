@@ -1,4 +1,4 @@
-import 'package:diox/diox.dart';
+import 'package:dio/dio.dart';
 import 'package:pretty_diox_logger/pretty_diox_logger.dart';
 
 void main() async {
