@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.1]
+
+- Add recommended lints
+- Fix connectTimeout and receiveTimeout 
+
 ## [1.3.0]
 
 - support dio >= 5.0.0
