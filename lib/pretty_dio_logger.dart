@@ -23,7 +23,7 @@ class PrettyDioLogger extends Interceptor {
   final bool error;
 
   /// InitialTab count to logPrint json response
-  static const int initialTab = 1;
+  static const int kInitialTab = 1;
 
   /// 1 tab length
   static const String tabStep = '    ';
@@ -193,18 +193,18 @@ class PrettyDioLogger extends Interceptor {
     }
   }
 
-  String _indent([int tabCount = initialTab]) => tabStep * tabCount;
+  String _indent([int tabCount = kInitialTab]) => tabStep * tabCount;
 
   void _printPrettyMap(
     Map data, {
-    int tabs = initialTab,
+    int initialTab = kInitialTab,
     bool isListItem = false,
     bool isLast = false,
   }) {
-    var _tabs = tabs;
-    final isRoot = _tabs == initialTab;
-    final initialIndent = _indent(_tabs);
-    _tabs++;
+    var tabs = initialTab;
+    final isRoot = tabs == kInitialTab;
+    final initialIndent = _indent(tabs);
+    tabs++;
 
     if (isRoot || isListItem) logPrint('║$initialIndent{');
 
@@ -216,31 +216,31 @@ class PrettyDioLogger extends Interceptor {
       }
       if (value is Map) {
         if (compact && _canFlattenMap(value)) {
-          logPrint('║${_indent(_tabs)} $key: $value${!isLast ? ',' : ''}');
+          logPrint('║${_indent(tabs)} $key: $value${!isLast ? ',' : ''}');
         } else {
-          logPrint('║${_indent(_tabs)} $key: {');
-          _printPrettyMap(value, tabs: _tabs);
+          logPrint('║${_indent(tabs)} $key: {');
+          _printPrettyMap(value, initialTab: tabs);
         }
       } else if (value is List) {
         if (compact && _canFlattenList(value)) {
-          logPrint('║${_indent(_tabs)} $key: ${value.toString()}');
+          logPrint('║${_indent(tabs)} $key: ${value.toString()}');
         } else {
-          logPrint('║${_indent(_tabs)} $key: [');
-          _printList(value, tabs: _tabs);
-          logPrint('║${_indent(_tabs)} ]${isLast ? '' : ','}');
+          logPrint('║${_indent(tabs)} $key: [');
+          _printList(value, tabs: tabs);
+          logPrint('║${_indent(tabs)} ]${isLast ? '' : ','}');
         }
       } else {
         final msg = value.toString().replaceAll('\n', '');
-        final indent = _indent(_tabs);
+        final indent = _indent(tabs);
         final linWidth = maxWidth - indent.length;
         if (msg.length + indent.length > linWidth) {
           final lines = (msg.length / linWidth).ceil();
           for (var i = 0; i < lines; ++i) {
             logPrint(
-                '║${_indent(_tabs)} ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
+                '║${_indent(tabs)} ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
           }
         } else {
-          logPrint('║${_indent(_tabs)} $key: $msg${!isLast ? ',' : ''}');
+          logPrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
         }
       }
     });
@@ -248,14 +248,14 @@ class PrettyDioLogger extends Interceptor {
     logPrint('║$initialIndent}${isListItem && !isLast ? ',' : ''}');
   }
 
-  void _printList(List list, {int tabs = initialTab}) {
+  void _printList(List list, {int tabs = kInitialTab}) {
     list.asMap().forEach((i, dynamic e) {
       final isLast = i == list.length - 1;
       if (e is Map) {
         if (compact && _canFlattenMap(e)) {
           logPrint('║${_indent(tabs)}  $e${!isLast ? ',' : ''}');
         } else {
-          _printPrettyMap(e, tabs: tabs + 1, isListItem: true, isLast: isLast);
+          _printPrettyMap(e, initialTab: tabs + 1, isListItem: true, isLast: isLast);
         }
       } else {
         logPrint('║${_indent(tabs + 2)} $e${isLast ? '' : ','}');
@@ -263,7 +263,7 @@ class PrettyDioLogger extends Interceptor {
     });
   }
 
-  void _printUint8List(Uint8List list, {int tabs = initialTab}) {
+  void _printUint8List(Uint8List list, {int tabs = kInitialTab}) {
     var chunks = [];
     for (var i = 0; i < list.length; i += chunkSize) {
       chunks.add(
