@@ -1,10 +1,9 @@
-# pretty_diox_logger
+# pretty_dio_logger
 
 [![Pub](https://img.shields.io/pub/v/pretty_diox_logger.svg)](https://pub.dev/packages/pretty_diox_logger)
 
 Pretty Dio logger is a [Dio](https://pub.dev/packages/diox) interceptor that logs network calls in a pretty, easy to read format.
 
-> Forked from [pretty_dio_logger](https://github.com/Milad-Akarie/pretty_dio_logger) to support Dio V5
 
 ## Usage
 

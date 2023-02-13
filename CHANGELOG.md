@@ -1,12 +1,9 @@
-#Changelog
+# Changelog
 
-## [1.3.4]
+## [1.3.0]
 
 - support dio >= 5.0.0
-
-## [1.3.3]
-
-- support diox >= 5.0.0
+- support Uint8List log
 
 ## [1.2.0-beta-1]
 
