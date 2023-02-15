@@ -23,6 +23,30 @@ dio.interceptors.add(PrettyDioLogger());
         maxWidth: 90));
 ```
 
+### Redaction from logs
+
+If there is something that needs to be redacted from the logs extend the `PrettyDioLogger` class and add one of the following snippets:
+
+#### Request
+```dart
+@override
+RequestOptions redactRequest(RequestOptions redactedOptions) {
+   // redaction logic
+
+   return redactedOptions
+}
+```
+
+#### Response
+```dart
+@override
+Response redactResponse(Response redactedResponse) {
+   // redaction logic
+
+   return redactedResponse;
+}
+```
+
 ## How it looks like
 
 ### VS Code

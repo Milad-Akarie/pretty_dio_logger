@@ -55,32 +55,38 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    var redactedOptions = redactRequest(options.copyWith());
+
     if (request) {
-      _printRequestHeader(options);
+      _printRequestHeader(redactedOptions);
     }
     if (requestHeader) {
-      _printMapAsTable(options.queryParameters, header: 'Query Parameters');
+      _printMapAsTable(redactedOptions.queryParameters, header: 'Query Parameters');
       final requestHeaders = <String, dynamic>{};
-      requestHeaders.addAll(options.headers);
-      requestHeaders['contentType'] = options.contentType?.toString();
-      requestHeaders['responseType'] = options.responseType.toString();
-      requestHeaders['followRedirects'] = options.followRedirects;
-      requestHeaders['connectTimeout'] = options.connectTimeout?.toString();
-      requestHeaders['receiveTimeout'] = options.receiveTimeout?.toString();
+      requestHeaders.addAll(redactedOptions.headers);
+      requestHeaders['contentType'] = redactedOptions.contentType?.toString();
+      requestHeaders['responseType'] = redactedOptions.responseType.toString();
+      requestHeaders['followRedirects'] = redactedOptions.followRedirects;
+      requestHeaders['connectTimeout'] = redactedOptions.connectTimeout?.toString();
+      requestHeaders['receiveTimeout'] = redactedOptions.receiveTimeout?.toString();
       _printMapAsTable(requestHeaders, header: 'Headers');
-      _printMapAsTable(options.extra, header: 'Extras');
+      _printMapAsTable(redactedOptions.extra, header: 'Extras');
     }
     if (requestBody && options.method != 'GET') {
-      final dynamic data = options.data;
+      final dynamic data = redactedOptions.data;
       if (data != null) {
-        if (data is Map) _printMapAsTable(options.data as Map?, header: 'Body');
+        if (data is Map) _printMapAsTable(data as Map?, header: 'Body');
         if (data is FormData) {
           final formDataMap = <String, dynamic>{}
             ..addEntries(data.fields)
             ..addEntries(data.files);
           _printMapAsTable(formDataMap, header: 'Form data | ${data.boundary}');
         } else {
+          logPrint('╔ Body');
+          logPrint('║');
           _printBlock(data.toString());
+          logPrint('║');
+          _printLine('╚');
         }
       }
     }
@@ -91,14 +97,15 @@ class PrettyDioLogger extends Interceptor {
   void onError(DioError err, ErrorInterceptorHandler handler) {
     if (error) {
       if (err.type == DioErrorType.badResponse) {
-        final uri = err.response?.requestOptions.uri;
+        final redactedRequest = redactRequest(err.requestOptions.copyWiht());
+        final redactedResponse = (err.response != null) ? redactResponse(err.response!.copyWith()) : null;
         _printBoxed(
             header:
-                'DioError ║ Status: ${err.response?.statusCode} ${err.response?.statusMessage}',
-            text: uri.toString());
-        if (err.response != null && err.response?.data != null) {
+                'DioError ║ Status: ${redactedResponse?.statusCode} ${redactedResponse?.statusMessage}',
+            text: redactedRequest.uri.toString());
+        if (redactedResponse != null && redactedResponse?.data != null) {
           logPrint('╔ ${err.type.toString()}');
-          _printResponse(err.response!);
+          _printResponse(redactedResponse!);
         }
         _printLine('╚');
         logPrint('');
@@ -111,10 +118,12 @@ class PrettyDioLogger extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    _printResponseHeader(response);
+    var redactedResponse = redactResponse(response.copyWith());
+
+    _printResponseHeader(redactedResponse);
     if (responseHeader) {
       final responseHeaders = <String, String>{};
-      response.headers
+      redactedResponse.headers
           .forEach((k, list) => responseHeaders[k] = list.toString());
       _printMapAsTable(responseHeaders, header: 'Headers');
     }
@@ -122,11 +131,21 @@ class PrettyDioLogger extends Interceptor {
     if (responseBody) {
       logPrint('╔ Body');
       logPrint('║');
-      _printResponse(response);
+      _printResponse(redactedResponse);
       logPrint('║');
       _printLine('╚');
     }
     super.onResponse(response, handler);
+  }
+
+  /// Override to redact sensitive information from the request from the logs.
+  RequestOptions redactRequest(RequestOptions redactedOptions) {
+    return redactedOptions;
+  }
+
+  /// Override to redact sensitive information from the response from the logs.
+  Response redactResponse(Response redactedResponse) {
+    return redactedResponse;
   }
 
   void _printBoxed({String? header, String? text}) {
@@ -293,5 +312,36 @@ class PrettyDioLogger extends Interceptor {
     map.forEach(
         (dynamic key, dynamic value) => _printKV(key.toString(), value));
     _printLine('╚');
+  }
+}
+
+extension ResponseExtensions on Response {
+  Response copyWith() {
+    return Response(
+      data: data,
+      requestOptions: requestOptions.copyWith(),
+      statusCode: statusCode,
+      statusMessage: statusMessage,
+      redirects: _copyRedirects(redirects),
+      extra: _copyExtra(extra),
+      headers: Headers.fromMap(headers.map),
+    );
+  }
+
+  Map<String, dynamic> _copyExtra(Map<String, dynamic> map) {
+    Map<String, dynamic> copy = const {};
+    for (var entry in map.entries) {
+      copy[entry.key] = entry.value;
+    }
+    return copy;
+  }
+
+  List<RedirectRecord> _copyRedirects(List<RedirectRecord> redirects) {
+    List<RedirectRecord> copy = [];
+    for (var redirect in redirects) {
+      copy.add(RedirectRecord(redirect.statusCode, redirect.method,
+          Uri.parse(redirect.location.toString())));
+    }
+    return copy;
   }
 }
