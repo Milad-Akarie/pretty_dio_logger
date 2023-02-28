@@ -41,7 +41,8 @@ class PrettyDioLogger extends Interceptor {
   /// In flutter, you'd better use debugPrint.
   /// you can also write log in a file.
   final void Function(Object object) logPrint;
-
+  static final RegExp _regexEmoji = RegExp(
+      r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])');
   PrettyDioLogger(
       {this.request = true,
       this.requestHeader = false,
@@ -211,6 +212,7 @@ class PrettyDioLogger extends Interceptor {
     data.keys.toList().asMap().forEach((index, dynamic key) {
       final isLast = index == data.length - 1;
       dynamic value = data[key];
+
       if (value is String) {
         value = '"${value.toString().replaceAll(RegExp(r'([\r\n])+'), " ")}"';
       }
@@ -237,7 +239,7 @@ class PrettyDioLogger extends Interceptor {
           final lines = (msg.length / linWidth).ceil();
           for (var i = 0; i < lines; ++i) {
             logPrint(
-                '║${_indent(tabs)} ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
+                '║${_indent(tabs)}  ${(_regexEmoji.hasMatch(msg)) ? msg : msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
           }
         } else {
           logPrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
@@ -255,7 +257,8 @@ class PrettyDioLogger extends Interceptor {
         if (compact && _canFlattenMap(e)) {
           logPrint('║${_indent(tabs)}  $e${!isLast ? ',' : ''}');
         } else {
-          _printPrettyMap(e, initialTab: tabs + 1, isListItem: true, isLast: isLast);
+          _printPrettyMap(e,
+              initialTab: tabs + 1, isListItem: true, isLast: isLast);
         }
       } else {
         logPrint('║${_indent(tabs + 2)} $e${isLast ? '' : ','}');
