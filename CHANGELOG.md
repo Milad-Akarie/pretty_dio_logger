@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0]
+- bump up Dio dependency to version 5.5.0
+- Feat: add response time to log
+- Feat: add enable property to enable/disable logging
+- Feat: add filter property to filter log by request options or data 
+- Feat: add emoji support
+- Fix: key not shown for multiline value (#7)
+
 ## [1.3.1]
 
 - Add recommended lints
