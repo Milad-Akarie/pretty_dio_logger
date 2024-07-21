@@ -1,10 +1,29 @@
-#Changelog
+# Changelog
+
+## [1.3.1]
+
+- Add recommended lints
+- Fix connectTimeout and receiveTimeout 
+
+## [1.3.1]
+- Fix connectTimeout and receiveTimeout #32
+- Update readme file badge
+
+## [1.3.0]
+
+- support dio >= 5.0.0
+- support Uint8List log
 
 ## [1.2.0-beta-1]
-- support dio >= 4.0.0 
+
+- support dio >= 4.0.0
+
 ## [1.2.0-beta]
+
 - migrate to nullSafety
+
 ## [1.1.1]
+
 - remove flutter as dependency
 
 ## [1.1.0]
