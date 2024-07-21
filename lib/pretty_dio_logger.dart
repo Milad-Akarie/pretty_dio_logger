@@ -236,8 +236,9 @@ class PrettyDioLogger extends Interceptor {
         if (msg.length + indent.length > linWidth) {
           final lines = (msg.length / linWidth).ceil();
           for (var i = 0; i < lines; ++i) {
+            final multilineKey = i == 0 ? "$key:" : "";
             logPrint(
-                '║${_indent(tabs)} ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
+                '║${_indent(tabs)} $multilineKey ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
           }
         } else {
           logPrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
