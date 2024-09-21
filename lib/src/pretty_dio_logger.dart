@@ -5,6 +5,38 @@ import 'package:dio/dio.dart';
 
 const _timeStampKey = '_pdl_timeStamp_';
 
+/// Enum representing the different ANSI colors used for logging output.
+/// These colors are typically used to differentiate between log types like
+/// requests, responses, headers, errors, and more.
+enum PrettyDioLoggerColors {
+  /// Represents the color red. Typically used to highlight errors or warnings.
+  red,
+
+  /// Represents the color black. Can be used for neutral or default log output.
+  black,
+
+  /// Represents the color green. Often used to highlight success messages or positive responses.
+  green,
+
+  /// Represents the color yellow. Typically used for warnings or cautionary logs.
+  yellow,
+
+  /// Represents the color blue. Can be used to indicate informational logs.
+  blue,
+
+  /// Represents the color magenta. Used for visual distinction in logs.
+  magenta,
+
+  /// Represents the color cyan. Used to highlight certain informational logs.
+  cyan,
+
+  /// Represents the color white. Often used for neutral log output or defaults.
+  white,
+
+  /// Resets the color back to default terminal color. Useful for clearing any previous color changes.
+  reset,
+}
+
 /// A pretty logger for Dio
 /// it will print request/response info with a pretty format
 /// and also can filter the request/response by [RequestOptions]
@@ -53,6 +85,38 @@ class PrettyDioLogger extends Interceptor {
   /// Enable logPrint
   final bool enabled;
 
+  /// The color used for printing request information.
+  /// Can be customized to highlight request logs in specific colors.
+  PrettyDioLoggerColors? requestColor;
+
+  /// The color used for printing header information.
+  /// Customize the color for visibility of header logs.
+  PrettyDioLoggerColors? headerColor;
+
+  /// The color used for printing the request or response body.
+  /// Useful to differentiate the body content visually.
+  PrettyDioLoggerColors? bodyColor;
+
+  /// The color used for printing error messages.
+  /// Helps in highlighting errors in a specific color.
+  PrettyDioLoggerColors? errorColor;
+
+  /// The color used for printing the response information.
+  /// Can be customized for visual clarity of response logs.
+  PrettyDioLoggerColors? responseColor;
+
+  /// The color used for printing response headers.
+  /// Customize this to easily spot response header logs.
+  PrettyDioLoggerColors? responseHeaderColor;
+
+  /// The color used for printing response status.
+  /// Useful for highlighting response status like 200, 404, etc.
+  PrettyDioLoggerColors? responseStatusColor;
+
+  /// The default color used for printing when no specific color is assigned.
+  /// Acts as a fallback color for general logs.
+  PrettyDioLoggerColors? defaultColor;
+
   /// Default constructor
   PrettyDioLogger({
     this.request = true,
@@ -66,7 +130,46 @@ class PrettyDioLogger extends Interceptor {
     this.logPrint = print,
     this.filter,
     this.enabled = true,
-  });
+    this.defaultColor,
+    this.requestColor,
+    this.headerColor,
+    this.bodyColor,
+    this.errorColor,
+    this.responseColor,
+    this.responseHeaderColor,
+    this.responseStatusColor,
+  }) {
+    defaultColor ??= PrettyDioLoggerColors.reset;
+    requestColor ??= defaultColor;
+    headerColor ??= defaultColor;
+    bodyColor ??= defaultColor;
+    errorColor ??= defaultColor;
+    responseColor ??= defaultColor;
+    responseHeaderColor ??= defaultColor;
+    responseStatusColor ??= defaultColor;
+  }
+
+  String getTextColors(PrettyDioLoggerColors color) {
+    if (color == PrettyDioLoggerColors.black) {
+      return '\u001b[30m';
+    } else if (color == PrettyDioLoggerColors.red) {
+      return '\u001b[31m';
+    } else if (color == PrettyDioLoggerColors.green) {
+      return '\u001b[32m';
+    } else if (color == PrettyDioLoggerColors.yellow) {
+      return '\u001b[33m';
+    } else if (color == PrettyDioLoggerColors.blue) {
+      return '\u001b[34m';
+    } else if (color == PrettyDioLoggerColors.magenta) {
+      return '\u001b[35m';
+    } else if (color == PrettyDioLoggerColors.cyan) {
+      return '\u001b[36m';
+    } else if (color == PrettyDioLoggerColors.white) {
+      return '\u001b[37m';
+    } else {
+      return '\u001b[0m';
+    }
+  }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -81,9 +184,12 @@ class PrettyDioLogger extends Interceptor {
     }
 
     if (request) {
-      _printRequestHeader(options);
+      logPrint(getTextColors(requestColor!));
+      _printRequestHeader(options, getTextColors(requestColor!));
+      logPrint(getTextColors(defaultColor!));
     }
     if (requestHeader) {
+      logPrint(getTextColors(headerColor!));
       _printMapAsTable(options.queryParameters, header: 'Query Parameters');
       final requestHeaders = <String, dynamic>{};
       requestHeaders.addAll(options.headers);
@@ -100,8 +206,10 @@ class PrettyDioLogger extends Interceptor {
       }
       _printMapAsTable(requestHeaders, header: 'Headers');
       _printMapAsTable(extra, header: 'Extras');
+      logPrint(getTextColors(PrettyDioLoggerColors.reset));
     }
     if (requestBody && options.method != 'GET') {
+      logPrint(getTextColors(bodyColor!));
       final dynamic data = options.data;
       if (data != null) {
         if (data is Map) _printMapAsTable(options.data as Map?, header: 'Body');
@@ -114,6 +222,7 @@ class PrettyDioLogger extends Interceptor {
           _printBlock(data.toString());
         }
       }
+      logPrint(getTextColors(PrettyDioLoggerColors.reset));
     }
     handler.next(options);
   }
@@ -129,6 +238,7 @@ class PrettyDioLogger extends Interceptor {
     }
 
     final triggerTime = err.requestOptions.extra[_timeStampKey];
+    logPrint(getTextColors(errorColor!));
 
     if (error) {
       if (err.type == DioExceptionType.badResponse) {
@@ -152,6 +262,7 @@ class PrettyDioLogger extends Interceptor {
       }
     }
     handler.next(err);
+    logPrint(getTextColors(PrettyDioLoggerColors.reset));
   }
 
   @override
@@ -172,24 +283,29 @@ class PrettyDioLogger extends Interceptor {
     }
     _printResponseHeader(response, diff);
     if (responseHeader) {
+      logPrint(getTextColors(responseHeaderColor!));
       final responseHeaders = <String, String>{};
       response.headers
           .forEach((k, list) => responseHeaders[k] = list.toString());
       _printMapAsTable(responseHeaders, header: 'Headers');
+      logPrint(getTextColors(PrettyDioLoggerColors.reset));
     }
 
     if (responseBody) {
+      logPrint(getTextColors(responseColor!));
       logPrint('╔ Body');
       logPrint('║');
-      _printResponse(response);
+      _printResponse(
+        response,
+      );
       logPrint('║');
       _printLine('╚');
+      logPrint(getTextColors(PrettyDioLoggerColors.reset));
     }
     handler.next(response);
   }
 
   void _printBoxed({String? header, String? text}) {
-    logPrint('');
     logPrint('╔╣ $header');
     logPrint('║  $text');
     _printLine('╚');
@@ -216,16 +332,21 @@ class PrettyDioLogger extends Interceptor {
   void _printResponseHeader(Response response, int responseTime) {
     final uri = response.requestOptions.uri;
     final method = response.requestOptions.method;
+    logPrint(getTextColors(responseStatusColor!));
     _printBoxed(
         header:
             'Response ║ $method ║ Status: ${response.statusCode} ${response.statusMessage}  ║ Time: $responseTime ms',
         text: uri.toString());
+    logPrint(getTextColors(PrettyDioLoggerColors.reset));
   }
 
-  void _printRequestHeader(RequestOptions options) {
+  void _printRequestHeader(RequestOptions options, String? tesxtColor) {
     final uri = options.uri;
     final method = options.method;
-    _printBoxed(header: 'Request ║ $method ', text: uri.toString());
+    _printBoxed(
+      header: 'Request ║ $method ',
+      text: uri.toString(),
+    );
   }
 
   void _printLine([String pre = '', String suf = '╝']) =>
