@@ -101,18 +101,19 @@ class PrettyDioLogger extends Interceptor {
       _printMapAsTable(requestHeaders, header: 'Headers');
       _printMapAsTable(extra, header: 'Extras');
     }
-    if (requestBody && options.method != 'GET') {
-      final dynamic data = options.data;
-      if (data != null) {
-        if (data is Map) _printMapAsTable(options.data as Map?, header: 'Body');
-        if (data is FormData) {
-          final formDataMap = <String, dynamic>{}
-            ..addEntries(data.fields)
-            ..addEntries(data.files);
-          _printMapAsTable(formDataMap, header: 'Form data | ${data.boundary}');
-        } else {
-          _printBlock(data.toString());
-        }
+
+    // i added this change here to printing the request body in case of get request
+    if (requestBody && options.data != null) {
+      final data = options.data;
+      if (data is Map) {
+        _printMapAsTable(data, header: 'Body');
+      } else if (data is FormData) {
+        final formDataMap = <String, dynamic>{}
+          ..addEntries(data.fields)
+          ..addEntries(data.files);
+        _printMapAsTable(formDataMap, header: 'Form data | ${data.boundary}');
+      } else {
+        _printBlock(data.toString());
       }
     }
     handler.next(options);
