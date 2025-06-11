@@ -1,7 +1,7 @@
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:characters/characters.dart';
 
 const _timeStampKey = '_pdl_timeStamp_';
 
@@ -235,7 +235,7 @@ class PrettyDioLogger extends Interceptor {
     final pre = '╟ $key: ';
     final msg = v.toString();
 
-    if (pre.length + msg.length > maxWidth) {
+    if (_calculateDisplayWidth(pre) + _calculateDisplayWidth(msg) > maxWidth) {
       logPrint(pre);
       _printBlock(msg);
     } else {
@@ -244,11 +244,26 @@ class PrettyDioLogger extends Interceptor {
   }
 
   void _printBlock(String msg) {
-    final lines = (msg.length / maxWidth).ceil();
-    for (var i = 0; i < lines; ++i) {
-      logPrint((i >= 0 ? '║ ' : '') +
-          msg.substring(i * maxWidth,
-              math.min<int>(i * maxWidth + maxWidth, msg.length)));
+    var currentLine = '';
+    var currentWidth = 0.0;
+
+    for (final char in msg.characters) {
+      final charWidth = _calculateDisplayWidth(char);
+
+      if (currentWidth + charWidth > maxWidth) {
+        // The current line is full, print and reset
+        logPrint('║ $currentLine');
+        currentLine = char;
+        currentWidth = charWidth;
+      } else {
+        currentLine += char;
+        currentWidth += charWidth;
+      }
+    }
+
+    // Print the last line
+    if (currentLine.isNotEmpty) {
+      logPrint('║ $currentLine');
     }
   }
 
@@ -290,18 +305,32 @@ class PrettyDioLogger extends Interceptor {
           logPrint('║${_indent(tabs)} ]${isLast ? '' : ','}');
         }
       } else {
-        final msg = value.toString().replaceAll('\n', '');
+        final msg = "$key: ${value.toString()}".replaceAll('\n', '');
         final indent = _indent(tabs);
-        final linWidth = maxWidth - indent.length;
-        if (msg.length + indent.length > linWidth) {
-          final lines = (msg.length / linWidth).ceil();
-          for (var i = 0; i < lines; ++i) {
-            final multilineKey = i == 0 ? "$key:" : "";
-            logPrint(
-                '║${_indent(tabs)} $multilineKey ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
+        final linWidth = maxWidth - _calculateDisplayWidth(indent);
+
+        if (_calculateDisplayWidth(msg) + _calculateDisplayWidth(indent) >
+            linWidth) {
+          var currentLine = '';
+          var currentWidth = 0.0;
+
+          for (final char in msg.characters) {
+            final charWidth = _calculateDisplayWidth(char);
+            if (currentWidth + charWidth > linWidth) {
+              logPrint('║$indent $currentLine');
+              currentLine = char;
+              currentWidth = charWidth;
+            } else {
+              currentLine += char;
+              currentWidth += charWidth;
+            }
+          }
+
+          if (currentLine.isNotEmpty) {
+            logPrint('║$indent $currentLine${!isLast ? ',' : ''}');
           }
         } else {
-          logPrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
+          logPrint('║$indent $msg${!isLast ? ',' : ''}');
         }
       }
     }
@@ -347,11 +376,12 @@ class PrettyDioLogger extends Interceptor {
     return map.values
             .where((dynamic val) => val is Map || val is List)
             .isEmpty &&
-        map.toString().length < maxWidth;
+        _calculateDisplayWidth(map.toString()) < maxWidth;
   }
 
   bool _canFlattenList(List list) {
-    return list.length < 10 && list.toString().length < maxWidth;
+    return list.length < 10 &&
+        _calculateDisplayWidth(list.toString()) < maxWidth;
   }
 
   void _printMapAsTable(Map? map, {String? header}) {
@@ -361,6 +391,25 @@ class PrettyDioLogger extends Interceptor {
       _printKV(entry.key.toString(), entry.value);
     }
     _printLine('╚');
+  }
+
+  double _calculateDisplayWidth(String text) {
+    double width = 0;
+    for (final char in text.characters) {
+      // Check for:
+      // 1. CJK Symbols and Punctuation (U+3000-U+303F)
+      // 2. CJK Unified Ideographs (U+4E00-U+9FFF)
+      // 3. Fullwidth ASCII variants (U+FF00-U+FFEF)
+      // 4. CJK Compatibility Forms (U+FE30-U+FE4F)
+      if (RegExp(
+              r'[\u3000-\u303f]|[\u4e00-\u9fff]|[\uff00-\uffef]|[\ufe30-\ufe4f]')
+          .hasMatch(char)) {
+        width += 1; // Full-width characters count as 1 unit width
+      } else {
+        width += 0.5; // Half-width characters count as 0.5 unit width
+      }
+    }
+    return width;
   }
 }
 
