@@ -369,19 +369,19 @@ class PrettyDioLogger extends Interceptor {
 
   int _printedLines = 0;
 
-void _safePrint(Object object) {
-  if (maxLines != null && _printedLines >= maxLines!) {
-    if (_printedLines == maxLines) {
-      super._safePrint(
-        '--- PrettyDioLogger truncated: reached maxLines=$maxLines ---',
-      );
+  void _safePrint(Object object) {
+    if (maxLines != null && _printedLines >= maxLines!) {
+      if (_printedLines == maxLines) {
+        logPrint(
+          '--- PrettyDioLogger truncated: reached maxLines=$maxLines ---',
+        );
+      }
+      return;
+    } else {
+      logPrint(object);
     }
     _printedLines++;
-    return;
   }
-  _printedLines++;
-  _safePrint(object);
-}
 
 
 }
