@@ -54,7 +54,7 @@ class PrettyDioLogger extends Interceptor {
   final bool enabled;
 
   /// Max lines
-  final int? maxLines
+  final int? maxLines;
 
   /// Default constructor
   PrettyDioLogger({
@@ -69,7 +69,7 @@ class PrettyDioLogger extends Interceptor {
     this.logPrint = print,
     this.filter,
     this.enabled = true,
-    this.maxLines
+    this.maxLines,
   });
 
   @override
@@ -376,7 +376,6 @@ class PrettyDioLogger extends Interceptor {
           '--- PrettyDioLogger truncated: reached maxLines=$maxLines ---',
         );
       }
-      return;
     } else {
       logPrint(object);
     }
