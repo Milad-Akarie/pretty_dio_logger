@@ -3,6 +3,16 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+// ---------------------------------------------------------------------------
+// Forked from pretty_dio_logger 1.4.0 with two extra features:
+//   1. Base64 truncation  – values that look like base64 and exceed
+//      [maxBase64Length] are shortened to the first [maxBase64Length] chars
+//      followed by "…" so logs stay readable.
+//   2. maxLines limit     – each section (request header, request body,
+//      response header, response body) stops printing after [maxLines] lines.
+//      Pass null to disable the limit (default behaviour).
+// ---------------------------------------------------------------------------
+
 const _timeStampKey = '_pdl_timeStamp_';
 
 /// A pretty logger for Dio
@@ -42,9 +52,7 @@ class PrettyDioLogger extends Interceptor {
   /// Size in which the Uint8List will be split
   static const int chunkSize = 20;
 
-  /// Log printer; defaults logPrint log to console.
-  /// In flutter, you'd better use debugPrint.
-  /// you can also write log in a file.
+  /// Log printer; defaults to console print.
   final void Function(Object object) logPrint;
 
   /// Filter request/response by [RequestOptions]
@@ -53,7 +61,29 @@ class PrettyDioLogger extends Interceptor {
   /// Enable logPrint
   final bool enabled;
 
-  /// Default constructor
+  // Internal line counter – reset before every section.
+  int _lineCount = 0;
+  bool _limitReached = false;
+
+  /// Maximum number of lines to print for each log section
+  /// (request header, request body, response header, response body).
+  /// Set to null for unlimited output.
+  final int? maxLines;
+
+  /// Any string value longer than this that looks like base64 will be
+  /// truncated. Defaults to 100 characters.
+  final int maxBase64Length;
+
+  /// Regex that matches a base64-encoded string (standard or URL-safe alphabet,
+  /// with optional padding). We only flag it when it is longer than
+  /// [maxBase64Length] so short values are never affected.
+  static final _base64Re = RegExp(r'^[A-Za-z0-9+/\-_]+=*$');
+
+
+  // Matches a data URI: data:<mime>;base64,<payload>
+  static final _dataUriRe = RegExp(r'^(data:[^;]+;base64,)(.+)$', dotAll: true);
+
+  // ignore: public_member_api_docs
   PrettyDioLogger({
     this.request = true,
     this.requestHeader = false,
@@ -66,6 +96,8 @@ class PrettyDioLogger extends Interceptor {
     this.logPrint = print,
     this.filter,
     this.enabled = true,
+    this.maxLines,
+    this.maxBase64Length = 100,
   });
 
   @override
@@ -83,7 +115,9 @@ class PrettyDioLogger extends Interceptor {
     if (request) {
       _printRequestHeader(options);
     }
+
     if (requestHeader) {
+      _resetCounter();
       _printMapAsTable(options.queryParameters, header: 'Query Parameters');
       final requestHeaders = <String, dynamic>{};
       requestHeaders.addAll(options.headers);
@@ -101,7 +135,9 @@ class PrettyDioLogger extends Interceptor {
       _printMapAsTable(requestHeaders, header: 'Headers');
       _printMapAsTable(extra, header: 'Extras');
     }
+
     if (requestBody && options.method != 'GET') {
+      _resetCounter();
       final dynamic data = options.data;
       if (data != null) {
         if (data is Map) _printMapAsTable(options.data as Map?, header: 'Body');
@@ -115,6 +151,7 @@ class PrettyDioLogger extends Interceptor {
         }
       }
     }
+
     handler.next(options);
   }
 
@@ -143,6 +180,7 @@ class PrettyDioLogger extends Interceptor {
             text: uri.toString());
         if (err.response != null && err.response?.data != null) {
           logPrint('╔ ${err.type.toString()}');
+          _resetCounter();
           _printResponse(err.response!);
         }
         _printLine('╚');
@@ -171,7 +209,9 @@ class PrettyDioLogger extends Interceptor {
       diff = DateTime.timestamp().millisecondsSinceEpoch - triggerTime;
     }
     _printResponseHeader(response, diff);
+
     if (responseHeader) {
+      _resetCounter();
       final responseHeaders = <String, String>{};
       response.headers
           .forEach((k, list) => responseHeaders[k] = list.toString());
@@ -179,14 +219,76 @@ class PrettyDioLogger extends Interceptor {
     }
 
     if (responseBody) {
-      logPrint('╔ Body');
-      logPrint('║');
+      _resetCounter();
+      _safePrint('╔ Body');
+      _safePrint('║');
       _printResponse(response);
-      logPrint('║');
+      _safePrint('║');
       _printLine('╚');
     }
+
     handler.next(response);
   }
+
+  void _resetCounter() {
+    _lineCount = 0;
+    _limitReached = false;
+  }
+
+  /// Prints [line] only when the maxLines limit has not been reached.
+  /// When the limit is hit for the first time it prints a notice.
+  void _safePrint(Object line) {
+    if (maxLines == null) {
+      logPrint(line);
+      return;
+    }
+    if (_limitReached) return;
+    if (_lineCount >= maxLines!) {
+      _limitReached = true;
+      logPrint('║');
+      logPrint(
+          '║ ======================= (output truncated at $maxLines lines) =======================');
+      logPrint('║');
+      return;
+    }
+    _lineCount++;
+    logPrint(line);
+  }
+
+  /// Truncates long base64 content so logs stay readable.
+  ///
+  /// Handles two formats:
+  ///  1. **Data URI** – `data:image/png;base64,<payload>`: keeps the prefix
+  ///     and truncates only the payload part.
+  ///  2. **Plain base64** – a raw base64 string without a prefix.
+  ///
+  /// Strings shorter than [maxBase64Length] are returned as-is.
+  dynamic _truncateBase64(dynamic value) {
+    if (value is! String) return value;
+
+    // ── 1. data URI (e.g. "data:image/png;base64,iVBOR…") ──────────────────
+    final uriMatch = _dataUriRe.firstMatch(value);
+    if (uriMatch != null) {
+      final prefix = uriMatch.group(1)!; // "data:image/png;base64,"
+      final payload = uriMatch.group(2)!; // raw base64 characters
+      if (payload.length > maxBase64Length) {
+        return '$prefix${payload.substring(0, maxBase64Length)} …';
+      }
+      return value;
+    }
+
+    // ── 2. Plain base64 string ───────────────────────────────────────────────
+    if (value.length > maxBase64Length &&
+        _base64Re.hasMatch(value.replaceAll(RegExp(r'\s'), ''))) {
+      return '${value.substring(0, maxBase64Length)} …';
+    }
+
+    return value;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private print helpers (adapted to use _safePrint + truncation)
+  // ---------------------------------------------------------------------------
 
   void _printBoxed({String? header, String? text}) {
     logPrint('');
@@ -200,13 +302,13 @@ class PrettyDioLogger extends Interceptor {
       if (response.data is Map) {
         _printPrettyMap(response.data as Map);
       } else if (response.data is Uint8List) {
-        logPrint('║${_indent()}[');
+        _safePrint('║${_indent()}[');
         _printUint8List(response.data as Uint8List);
-        logPrint('║${_indent()}]');
+        _safePrint('║${_indent()}]');
       } else if (response.data is List) {
-        logPrint('║${_indent()}[');
+        _safePrint('║${_indent()}[');
         _printList(response.data as List);
-        logPrint('║${_indent()}]');
+        _safePrint('║${_indent()}]');
       } else {
         _printBlock(response.data.toString());
       }
@@ -232,21 +334,22 @@ class PrettyDioLogger extends Interceptor {
       logPrint('$pre${'═' * maxWidth}$suf');
 
   void _printKV(String? key, Object? v) {
+    final truncated = _truncateBase64(v);
     final pre = '╟ $key: ';
-    final msg = v.toString();
+    final msg = truncated.toString();
 
     if (pre.length + msg.length > maxWidth) {
-      logPrint(pre);
+      _safePrint(pre);
       _printBlock(msg);
     } else {
-      logPrint('$pre$msg');
+      _safePrint('$pre$msg');
     }
   }
 
   void _printBlock(String msg) {
     final lines = (msg.length / maxWidth).ceil();
     for (var i = 0; i < lines; ++i) {
-      logPrint((i >= 0 ? '║ ' : '') +
+      _safePrint((i >= 0 ? '║ ' : '') +
           msg.substring(i * maxWidth,
               math.min<int>(i * maxWidth + maxWidth, msg.length)));
     }
@@ -265,29 +368,34 @@ class PrettyDioLogger extends Interceptor {
     final initialIndent = _indent(tabs);
     tabs++;
 
-    if (isRoot || isListItem) logPrint('║$initialIndent{');
+    if (isRoot || isListItem) _safePrint('║$initialIndent{');
 
     for (var index = 0; index < data.length; index++) {
       final isLast = index == data.length - 1;
       final key = '"${data.keys.elementAt(index)}"';
       dynamic value = data[data.keys.elementAt(index)];
+
       if (value is String) {
-        value = '"${value.toString().replaceAll(RegExp(r'([\r\n])+'), " ")}"';
+        // First truncate base64, then quote
+        final truncated = _truncateBase64(value);
+        value =
+            '"${truncated.toString().replaceAll(RegExp(r'([\r\n])+'), " ")}"';
       }
+
       if (value is Map) {
         if (compact && _canFlattenMap(value)) {
-          logPrint('║${_indent(tabs)} $key: $value${!isLast ? ',' : ''}');
+          _safePrint('║${_indent(tabs)} $key: $value${!isLast ? ',' : ''}');
         } else {
-          logPrint('║${_indent(tabs)} $key: {');
+          _safePrint('║${_indent(tabs)} $key: {');
           _printPrettyMap(value, initialTab: tabs);
         }
       } else if (value is List) {
         if (compact && _canFlattenList(value)) {
-          logPrint('║${_indent(tabs)} $key: ${value.toString()}');
+          _safePrint('║${_indent(tabs)} $key: ${value.toString()}');
         } else {
-          logPrint('║${_indent(tabs)} $key: [');
+          _safePrint('║${_indent(tabs)} $key: [');
           _printList(value, tabs: tabs);
-          logPrint('║${_indent(tabs)} ]${isLast ? '' : ','}');
+          _safePrint('║${_indent(tabs)} ]${isLast ? '' : ','}');
         }
       } else {
         final msg = value.toString().replaceAll('\n', '');
@@ -296,17 +404,17 @@ class PrettyDioLogger extends Interceptor {
         if (msg.length + indent.length > linWidth) {
           final lines = (msg.length / linWidth).ceil();
           for (var i = 0; i < lines; ++i) {
-            final multilineKey = i == 0 ? "$key:" : "";
-            logPrint(
+            final multilineKey = i == 0 ? '$key:' : '';
+            _safePrint(
                 '║${_indent(tabs)} $multilineKey ${msg.substring(i * linWidth, math.min<int>(i * linWidth + linWidth, msg.length))}');
           }
         } else {
-          logPrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
+          _safePrint('║${_indent(tabs)} $key: $msg${!isLast ? ',' : ''}');
         }
       }
     }
 
-    logPrint('║$initialIndent}${isListItem && !isLast ? ',' : ''}');
+    _safePrint('║$initialIndent}${isListItem && !isLast ? ',' : ''}');
   }
 
   void _printList(List list, {int tabs = kInitialTab}) {
@@ -315,7 +423,7 @@ class PrettyDioLogger extends Interceptor {
       final isLast = i == list.length - 1;
       if (element is Map) {
         if (compact && _canFlattenMap(element)) {
-          logPrint('║${_indent(tabs)}  $element${!isLast ? ',' : ''}');
+          _safePrint('║${_indent(tabs)}  $element${!isLast ? ',' : ''}');
         } else {
           _printPrettyMap(
             element,
@@ -325,7 +433,9 @@ class PrettyDioLogger extends Interceptor {
           );
         }
       } else {
-        logPrint('║${_indent(tabs + 2)} $element${isLast ? '' : ','}');
+        // Truncate base64 in list items too
+        final truncated = _truncateBase64(element);
+        _safePrint('║${_indent(tabs + 2)} $truncated${isLast ? '' : ','}');
       }
     }
   }
@@ -339,7 +449,7 @@ class PrettyDioLogger extends Interceptor {
       );
     }
     for (var element in chunks) {
-      logPrint('║${_indent(tabs)} ${element.join(", ")}');
+      _safePrint('║${_indent(tabs)} ${element.join(", ")}');
     }
   }
 
@@ -356,7 +466,7 @@ class PrettyDioLogger extends Interceptor {
 
   void _printMapAsTable(Map? map, {String? header}) {
     if (map == null || map.isEmpty) return;
-    logPrint('╔ $header ');
+    _safePrint('╔ $header ');
     for (final entry in map.entries) {
       _printKV(entry.key.toString(), entry.value);
     }
