@@ -56,9 +56,9 @@ class PrettyDioLogger extends Interceptor {
   /// Default constructor
   PrettyDioLogger({
     this.request = true,
-    this.requestHeader = false,
-    this.requestBody = false,
-    this.responseHeader = false,
+    this.requestHeader = true,
+    this.requestBody = true,
+    this.responseHeader = true,
     this.responseBody = true,
     this.error = true,
     this.maxWidth = 90,
@@ -150,6 +150,13 @@ class PrettyDioLogger extends Interceptor {
         }
         _printLine('╚');
         logPrint('');
+        if (responseHeader) {
+          logPrint('');
+          final responseHeaders = <String, String>{};
+          err.response?.headers
+              .forEach((k, list) => responseHeaders[k] = list.toString());
+          _printMapAsTable(responseHeaders, header: 'Headers');
+        }
       } else {
         _printBoxed(header: 'DioError ║ ${err.type}', text: err.message);
       }
